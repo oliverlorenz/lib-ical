@@ -10,6 +10,14 @@ A lightweight TypeScript library for parsing, serializing, and manipulating iCal
 - Anonymize calendars (strip personal data, replace event titles)
 - Merge multiple calendars into one (VTIMEZONE deduplication included)
 - Remove or clip events within time ranges — with full recurring event support (EXDATE + exception events)
+- Filter or keep events by property value
+- List all event occurrences in a date range (recurring events expanded automatically)
+- Expand recurring events into individual VEVENT components
+- Find scheduling conflicts between overlapping events
+- Diff two calendar versions to detect added, removed, and changed events
+- Find free time slots in a calendar window
+- Count total busy time within a window
+- Invert a calendar to produce a free-time calendar
 
 ## Requirements
 
@@ -37,6 +45,21 @@ const component = await calendar.loadFromUrl('https://example.com/calendar.ics')
 // Serialize back to iCal
 const icsString = calendar.serialize(component);
 ```
+
+## Examples
+
+Runnable examples are in the [examples/](examples/) folder. Each example imports from `@oliverlorenz/lib-ical`, so build the package first (`npm run build`) before executing them.
+
+| Example | What it shows |
+|---|---|
+| [01-parse-and-serialize.ts](examples/01-parse-and-serialize.ts) | Parse an iCal string, inspect the component tree, serialize back |
+| [02-anonymize-and-merge.ts](examples/02-anonymize-and-merge.ts) | Strip personal data with `anonymize`, combine calendars with `merge` |
+| [03-clean-range.ts](examples/03-clean-range.ts) | Block a holiday week in a recurring event series with `cleanRange` |
+| [04-filter-events.ts](examples/04-filter-events.ts) | Remove or keep events by property pattern with `filterEvents`/`keepEvents` |
+| [05-list-and-expand.ts](examples/05-list-and-expand.ts) | List occurrences in a range with `listEvents`, flatten RRULE events with `expandRecurring` |
+| [06-free-slots-and-busy-time.ts](examples/06-free-slots-and-busy-time.ts) | Find open slots with `findFreeSlots`, measure load with `countBusyTime`, invert a calendar |
+| [07-find-conflicts.ts](examples/07-find-conflicts.ts) | Detect overlapping events with `findConflicts` |
+| [08-diff-calendars.ts](examples/08-diff-calendars.ts) | Compare two calendar versions with `diff` |
 
 ## API
 
@@ -141,6 +164,149 @@ const cleaned = calendar.cleanRanges(component, [
 ]);
 ```
 
+### `calendar.filterEvents(component, ...criteria: EventFilterCriteria[]): ICalComponent`
+
+Returns a new calendar with all `VEVENT` components that match **any** of the given criteria removed. Non-VEVENT components (VTIMEZONE, VALARM, etc.) are always kept.
+
+```typescript
+// Remove all events whose SUMMARY contains "Meeting"
+const filtered = calendar.filterEvents(component, {
+  property: 'SUMMARY',
+  pattern: /Meeting/,
+});
+```
+
+### `calendar.keepEvents(component, ...criteria: EventFilterCriteria[]): ICalComponent`
+
+The inverse of `filterEvents` — keeps only `VEVENT` components that match at least one criterion.
+
+```typescript
+// Keep only events categorised as WORK
+const workOnly = calendar.keepEvents(component, {
+  property: 'CATEGORIES',
+  pattern: /WORK/,
+});
+```
+
+`EventFilterCriteria`:
+
+```typescript
+interface EventFilterCriteria {
+  property?: string; // which property to test (omit to test all properties)
+  pattern: RegExp;   // matched against the property value
+}
+```
+
+### `calendar.listEvents(component, from: Date, to: Date): ICalComponent[]`
+
+Returns all event occurrences that fall within `[from, to]`. Recurring events are automatically expanded — each occurrence is returned as a separate `ICalComponent` with concrete `DTSTART`/`DTEND` values. The list is sorted by `DTSTART` ascending.
+
+```typescript
+const events = calendar.listEvents(
+  component,
+  new Date('2025-01-01T00:00:00Z'),
+  new Date('2025-01-31T23:59:59Z'),
+);
+for (const event of events) {
+  const start = event.properties.find((p) => p.name === 'DTSTART')?.value;
+  const summary = event.properties.find((p) => p.name === 'SUMMARY')?.value;
+  console.log(`${start}  ${summary}`);
+}
+```
+
+### `calendar.expandRecurring(component, from: Date, to: Date): ICalComponent`
+
+Returns a new `VCALENDAR` where each recurring `VEVENT` (those with an `RRULE`) is replaced by individual occurrence `VEVENT` components for the given window. Non-recurring events and non-VEVENT components are kept as-is.
+
+```typescript
+const expanded = calendar.expandRecurring(
+  component,
+  new Date('2025-01-01T00:00:00Z'),
+  new Date('2025-03-31T23:59:59Z'),
+);
+// expanded.components contains individual VEVENTs, no RRULE properties
+```
+
+### `calendar.findConflicts(component, from: Date, to: Date): ConflictPair[]`
+
+Returns all pairs of events within the window whose time intervals overlap (`aStart < bEnd && bStart < aEnd`).
+
+```typescript
+const conflicts = calendar.findConflicts(component, from, to);
+for (const { first, second } of conflicts) {
+  const a = first.properties.find((p) => p.name === 'SUMMARY')?.value;
+  const b = second.properties.find((p) => p.name === 'SUMMARY')?.value;
+  console.log(`Conflict: "${a}" overlaps "${b}"`);
+}
+```
+
+`ConflictPair`:
+
+```typescript
+interface ConflictPair {
+  first: ICalComponent;
+  second: ICalComponent;
+}
+```
+
+### `calendar.diff(before, after: ICalComponent): CalendarDiffResult`
+
+Compares two calendar snapshots and returns which events were added, removed, or changed. Events are matched by `UID` (and `RECURRENCE-ID` for exception events). An event is considered changed when any property value differs.
+
+```typescript
+const { added, removed, changed } = calendar.diff(before, after);
+console.log('New events:', added.length);
+console.log('Deleted events:', removed.length);
+console.log('Modified events:', changed.length);
+```
+
+`CalendarDiffResult`:
+
+```typescript
+interface CalendarDiffResult {
+  added: ICalComponent[];
+  removed: ICalComponent[];
+  changed: ICalComponent[];
+}
+```
+
+### `calendar.findFreeSlots(component, from: Date, to: Date, minDurationMs?: number): ICalComponent[]`
+
+Returns `VEVENT` components representing the gaps between booked events within `[from, to]`. Optionally filters out slots shorter than `minDurationMs`.
+
+```typescript
+const ONE_HOUR = 60 * 60 * 1000;
+const slots = calendar.findFreeSlots(
+  component,
+  new Date('2025-06-02T08:00:00Z'),
+  new Date('2025-06-02T18:00:00Z'),
+  ONE_HOUR,
+);
+for (const slot of slots) {
+  const start = slot.properties.find((p) => p.name === 'DTSTART')?.value;
+  const end = slot.properties.find((p) => p.name === 'DTEND')?.value;
+  console.log(`Free: ${start} → ${end}`);
+}
+```
+
+### `calendar.countBusyTime(component, from: Date, to: Date): number`
+
+Returns the total number of milliseconds occupied by events within `[from, to]`. Overlapping events are merged before counting so time is never double-counted.
+
+```typescript
+const busyMs = calendar.countBusyTime(component, from, to);
+console.log(`Busy: ${busyMs / 3_600_000} h`);
+```
+
+### `calendar.invert(component, from: Date, to: Date): ICalComponent`
+
+Returns a new `VCALENDAR` whose `VEVENT` components represent the free gaps between booked events in the window — the complement of the calendar within `[from, to]`. This is the primitive that `findFreeSlots` and `countBusyTime` are built on.
+
+```typescript
+const freeCal = calendar.invert(component, from, to);
+// freeCal.components contains VEVENT entries for each unbooked interval
+```
+
 ## Data types
 
 ```typescript
@@ -162,7 +328,22 @@ interface ICalProperty {
 All components are injectable via the `Calendar` constructor, which is useful for custom behaviour or testing.
 
 ```typescript
-import { Calendar, Parser, Serializer, Anonymizer, Merger, RangeCleaner } from '@oliverlorenz/lib-ical';
+import {
+  Calendar,
+  Parser,
+  Serializer,
+  Anonymizer,
+  Merger,
+  RangeCleaner,
+  EventFilter,
+  EventLister,
+  CalendarInverter,
+  RecurringExpander,
+  ConflictFinder,
+  CalendarDiff,
+  FreeSlotFinder,
+  BusyTimeCounter,
+} from '@oliverlorenz/lib-ical';
 
 const calendar = new Calendar(
   new Parser(),
@@ -170,6 +351,14 @@ const calendar = new Calendar(
   new Anonymizer('Termin'),   // custom summary replacement
   new Merger(),
   new RangeCleaner(),
+  new EventFilter(),
+  new EventLister(),
+  new CalendarInverter(),
+  new RecurringExpander(),
+  new ConflictFinder(),
+  new CalendarDiff(),
+  new FreeSlotFinder(),
+  new BusyTimeCounter(),
 );
 ```
 
@@ -184,7 +373,7 @@ new Anonymizer(
 
 ## Supported RRULE frequencies
 
-`cleanRange` and `RRuleExpander` support the following `FREQ` values:
+`cleanRange`, `listEvents`, `expandRecurring`, and `RRuleExpander` support the following `FREQ` values:
 
 | FREQ | INTERVAL | BYDAY | BYMONTHDAY | COUNT | UNTIL |
 |---|---|---|---|---|---|
@@ -197,7 +386,7 @@ Positional `BYDAY` values (e.g. `1MO`, `-1FR`) are treated as plain day-of-week 
 
 ## Known limitations
 
-- **Timezone handling**: TZID parameters on `DTSTART`/`DTEND` are preserved as-is during parse/serialize, but datetime arithmetic in `cleanRange` treats all values as UTC/floating. Timezone-aware expansion is not supported.
+- **Timezone handling**: TZID parameters on `DTSTART`/`DTEND` are preserved as-is during parse/serialize, but datetime arithmetic in `cleanRange`, `listEvents`, `findFreeSlots`, and related methods treats all values as UTC/floating. Timezone-aware expansion is not supported.
 - **RRULE**: BYSECOND, BYMINUTE, BYHOUR, BYYEARDAY, BYWEEKNO, BYSETPOS, and positional BYDAY (`1MO`) are not fully implemented.
 
 ## Development
