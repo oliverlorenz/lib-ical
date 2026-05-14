@@ -1,5 +1,5 @@
 {
-  "name": "@oliverlorenz/<REPO_NAME>",
+  "name": "@oliverlorenz/lib-ical",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,15 +20,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oliverlorenz/<REPO_NAME>.git"
+    "url": "git+https://github.com/oliverlorenz/lib-ical.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/oliverlorenz/<REPO_NAME>/issues"
+    "url": "https://github.com/oliverlorenz/lib-ical/issues"
   },
-  "homepage": "https://github.com/oliverlorenz/<REPO_NAME>#readme",
+  "homepage": "https://github.com/oliverlorenz/lib-ical#readme",
   "description": "",
   "engines": {
     "node": ">=22.0.0"
