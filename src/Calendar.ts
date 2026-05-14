@@ -80,10 +80,7 @@ export class Calendar {
     return this.rangeCleaner.clean(component, start, end);
   }
 
-  public cleanRanges(
-    component: ICalComponent,
-    ranges: ReadonlyArray<[Date, Date]>,
-  ): ICalComponent {
+  public cleanRanges(component: ICalComponent, ranges: ReadonlyArray<[Date, Date]>): ICalComponent {
     return this.rangeCleaner.cleanRanges(component, ranges);
   }
 

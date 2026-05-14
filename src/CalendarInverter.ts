@@ -26,7 +26,9 @@ export class CalendarInverter {
     const intervals: [Date, Date][] = [];
 
     for (const event of this.eventLister.list(component, from, to)) {
-      const start = parseDatetimeValue(event.properties.find((p) => p.name === 'DTSTART')?.value ?? '');
+      const start = parseDatetimeValue(
+        event.properties.find((p) => p.name === 'DTSTART')?.value ?? '',
+      );
       const end = parseDatetimeValue(event.properties.find((p) => p.name === 'DTEND')?.value ?? '');
       if (!start || !end) continue;
 
@@ -44,10 +46,10 @@ export class CalendarInverter {
   private mergeIntervals(intervals: [Date, Date][]): [Date, Date][] {
     if (intervals.length === 0) return [];
 
-    const merged: [Date, Date][] = [intervals[0]!];
+    const merged: [Date, Date][] = [intervals[0] as [Date, Date]];
     for (let i = 1; i < intervals.length; i++) {
-      const last = merged[merged.length - 1]!;
-      const [currStart, currEnd] = intervals[i]!;
+      const last = merged[merged.length - 1] as [Date, Date];
+      const [currStart, currEnd] = intervals[i] as [Date, Date];
       if (currStart <= last[1]) {
         if (currEnd > last[1]) merged[merged.length - 1] = [last[0], currEnd];
       } else {

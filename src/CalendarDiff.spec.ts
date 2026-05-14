@@ -81,8 +81,16 @@ describe('CalendarDiff', () => {
 
   describe('combined changes', () => {
     it('correctly identifies added, removed and changed in one call', () => {
-      const before = makeCalendar(makeEvent('keep', 'Keep'), makeEvent('change', 'Old'), makeEvent('remove', 'Gone'));
-      const after = makeCalendar(makeEvent('keep', 'Keep'), makeEvent('change', 'New'), makeEvent('add', 'Fresh'));
+      const before = makeCalendar(
+        makeEvent('keep', 'Keep'),
+        makeEvent('change', 'Old'),
+        makeEvent('remove', 'Gone'),
+      );
+      const after = makeCalendar(
+        makeEvent('keep', 'Keep'),
+        makeEvent('change', 'New'),
+        makeEvent('add', 'Fresh'),
+      );
       const result = differ.diff(before, after);
       expect(uids(result.added)).toEqual(['add']);
       expect(uids(result.removed)).toEqual(['remove']);
@@ -134,16 +142,15 @@ describe('CalendarDiff', () => {
 
   describe('events with differing property counts', () => {
     it('reports as changed when after event has more properties than before', () => {
-      const before = makeCalendar(makeEvent('a', 'Meeting'));
-      const after = makeCalendar({
+      const before = makeCalendar({
         name: 'VEVENT',
         properties: [
           { name: 'UID', params: {}, value: 'a' },
           { name: 'SUMMARY', params: {}, value: 'Meeting' },
-          { name: 'LOCATION', params: {}, value: 'Room 101' },
         ],
         components: [],
       });
+      const after = makeCalendar(makeEvent('a', 'Meeting'));
       const result = differ.diff(before, after);
       expect(result.changed).toHaveLength(1);
     });

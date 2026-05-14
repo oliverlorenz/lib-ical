@@ -9,8 +9,9 @@ export class BusyTimeCounter {
     const totalMs = to.getTime() - from.getTime();
     const antiCal = this.inverter.invert(component, from, to);
     const freeMs = antiCal.components.reduce((sum, c) => {
-      const start = parseDatetimeValue(c.properties.find((p) => p.name === 'DTSTART')!.value)!;
-      const end = parseDatetimeValue(c.properties.find((p) => p.name === 'DTEND')!.value)!;
+      const start = parseDatetimeValue(c.properties.find((p) => p.name === 'DTSTART')?.value ?? '');
+      const end = parseDatetimeValue(c.properties.find((p) => p.name === 'DTEND')?.value ?? '');
+      if (!start || !end) return sum;
       return sum + (end.getTime() - start.getTime());
     }, 0);
     return totalMs - freeMs;

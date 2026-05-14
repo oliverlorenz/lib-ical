@@ -114,7 +114,10 @@ describe('Calendar', () => {
       const ranges: Array<[Date, Date]> = [
         [new Date('2024-01-15T10:00:00Z'), new Date('2024-01-15T12:00:00Z')],
       ];
-      const result = makeCalendar({}, {}, {}, {}, { cleanRanges }).cleanRanges(MOCK_COMPONENT, ranges);
+      const result = makeCalendar({}, {}, {}, {}, { cleanRanges }).cleanRanges(
+        MOCK_COMPONENT,
+        ranges,
+      );
       expect(cleanRanges).toHaveBeenCalledWith(MOCK_COMPONENT, ranges);
       expect(result).toBe(cleanedComponent);
     });
@@ -141,9 +144,9 @@ describe('Calendar', () => {
         status: 404,
         statusText: 'Not Found',
       } as Response);
-      await expect(
-        makeCalendar().loadFromUrl('https://example.com/missing.ics'),
-      ).rejects.toThrow('Failed to fetch iCal from https://example.com/missing.ics: 404 Not Found');
+      await expect(makeCalendar().loadFromUrl('https://example.com/missing.ics')).rejects.toThrow(
+        'Failed to fetch iCal from https://example.com/missing.ics: 404 Not Found',
+      );
     });
   });
 
@@ -152,7 +155,11 @@ describe('Calendar', () => {
       const filtered = { ...MOCK_COMPONENT };
       const filter = jest.fn().mockReturnValue(filtered);
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
         { filter } as unknown as EventFilter,
       );
       const result = cal.filterEvents(MOCK_COMPONENT, { pattern: /x/ });
@@ -166,7 +173,11 @@ describe('Calendar', () => {
       const kept = { ...MOCK_COMPONENT };
       const keep = jest.fn().mockReturnValue(kept);
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
         { keep } as unknown as EventFilter,
       );
       const result = cal.keepEvents(MOCK_COMPONENT, { pattern: /x/ });
@@ -182,8 +193,13 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, { list } as unknown as EventLister,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        { list } as unknown as EventLister,
       );
       const result = cal.listEvents(MOCK_COMPONENT, from, to);
       expect(list).toHaveBeenCalledWith(MOCK_COMPONENT, from, to);
@@ -198,8 +214,14 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, { invert } as unknown as CalendarInverter,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        { invert } as unknown as CalendarInverter,
       );
       const result = cal.invert(MOCK_COMPONENT, from, to);
       expect(invert).toHaveBeenCalledWith(MOCK_COMPONENT, from, to);
@@ -214,8 +236,15 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, undefined, { expand } as unknown as RecurringExpander,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        { expand } as unknown as RecurringExpander,
       );
       const result = cal.expandRecurring(MOCK_COMPONENT, from, to);
       expect(expand).toHaveBeenCalledWith(MOCK_COMPONENT, from, to);
@@ -230,8 +259,16 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, undefined, undefined, { find } as unknown as ConflictFinder,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { find } as unknown as ConflictFinder,
       );
       const result = cal.findConflicts(MOCK_COMPONENT, from, to);
       expect(find).toHaveBeenCalledWith(MOCK_COMPONENT, from, to);
@@ -244,8 +281,17 @@ describe('Calendar', () => {
       const diffResult = { added: [], removed: [], changed: [] };
       const diff = jest.fn().mockReturnValue(diffResult);
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, undefined, undefined, undefined, { diff } as unknown as CalendarDiff,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { diff } as unknown as CalendarDiff,
       );
       const other = { ...MOCK_COMPONENT };
       const result = cal.diff(MOCK_COMPONENT, other);
@@ -261,8 +307,17 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, undefined, undefined, undefined, undefined,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
         { find } as unknown as FreeSlotFinder,
       );
       const result = cal.findFreeSlots(MOCK_COMPONENT, from, to);
@@ -275,8 +330,17 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, undefined, undefined, undefined, undefined,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
         { find } as unknown as FreeSlotFinder,
       );
       cal.findFreeSlots(MOCK_COMPONENT, from, to, 1800000);
@@ -290,8 +354,18 @@ describe('Calendar', () => {
       const from = new Date('2024-01-01T00:00:00Z');
       const to = new Date('2024-01-02T00:00:00Z');
       const cal = new Calendar(
-        {} as Parser, {} as Serializer, {} as Anonymizer, {} as Merger, {} as RangeCleaner,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
         { count } as unknown as BusyTimeCounter,
       );
       const result = cal.countBusyTime(MOCK_COMPONENT, from, to);
@@ -302,13 +376,25 @@ describe('Calendar', () => {
 
   describe('integration', () => {
     it('round-trips parse → serialize without data loss', () => {
-      const calendar = new Calendar(new Parser(), new Serializer(), new Anonymizer(), new Merger(), new RangeCleaner());
+      const calendar = new Calendar(
+        new Parser(),
+        new Serializer(),
+        new Anonymizer(),
+        new Merger(),
+        new RangeCleaner(),
+      );
       const result = calendar.serialize(calendar.parse(SIMPLE_ICAL));
       expect(calendar.serialize(calendar.parse(result))).toBe(result);
     });
 
     it('anonymize → serialize removes personal data', () => {
-      const calendar = new Calendar(new Parser(), new Serializer(), new Anonymizer(), new Merger(), new RangeCleaner());
+      const calendar = new Calendar(
+        new Parser(),
+        new Serializer(),
+        new Anonymizer(),
+        new Merger(),
+        new RangeCleaner(),
+      );
       const result = calendar.serialize(calendar.anonymize(calendar.parse(SIMPLE_ICAL)));
       expect(result).toContain('SUMMARY:Event');
       expect(result).not.toContain('Meeting with John');
@@ -317,12 +403,26 @@ describe('Calendar', () => {
     });
 
     it('merge → serialize combines events from multiple calendars', () => {
-      const calendar = new Calendar(new Parser(), new Serializer(), new Anonymizer(), new Merger(), new RangeCleaner());
+      const calendar = new Calendar(
+        new Parser(),
+        new Serializer(),
+        new Anonymizer(),
+        new Merger(),
+        new RangeCleaner(),
+      );
       const cal1 = calendar.parse(SIMPLE_ICAL);
       const cal2 = calendar.parse(
-        ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', 'UID:second@example.com',
-          'SUMMARY:Second Event', 'DTSTART:20240102T100000Z', 'DTEND:20240102T110000Z',
-          'END:VEVENT', 'END:VCALENDAR'].join('\r\n'),
+        [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'BEGIN:VEVENT',
+          'UID:second@example.com',
+          'SUMMARY:Second Event',
+          'DTSTART:20240102T100000Z',
+          'DTEND:20240102T110000Z',
+          'END:VEVENT',
+          'END:VCALENDAR',
+        ].join('\r\n'),
       );
       const result = calendar.serialize(calendar.merge(cal1, cal2));
       expect(result).toContain('UID:test-uid@example.com');

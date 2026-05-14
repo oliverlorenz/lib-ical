@@ -33,13 +33,18 @@ describe('EventFilter', () => {
   describe('with property specified', () => {
     it('removes events whose SUMMARY matches', () => {
       const cal = makeCalendar(makeEvent('a', 'Team Meeting'), makeEvent('b', 'Birthday'));
-      expect(uids(filter.filter(cal, [{ property: 'SUMMARY', pattern: /meeting/i }]))).toEqual(['b']);
+      expect(uids(filter.filter(cal, [{ property: 'SUMMARY', pattern: /meeting/i }]))).toEqual([
+        'b',
+      ]);
     });
 
     it('does not remove events where a different property matches but not the specified one', () => {
       // LOCATION matches but we only check SUMMARY
       const cal = makeCalendar(makeEvent('a', 'Appointment', 'Berlin HQ'), makeEvent('b', 'Call'));
-      expect(uids(filter.filter(cal, [{ property: 'SUMMARY', pattern: /Berlin/ }]))).toEqual(['a', 'b']);
+      expect(uids(filter.filter(cal, [{ property: 'SUMMARY', pattern: /Berlin/ }]))).toEqual([
+        'a',
+        'b',
+      ]);
     });
 
     it('removes events whose LOCATION matches', () => {
@@ -47,7 +52,9 @@ describe('EventFilter', () => {
         makeEvent('a', 'Appointment', 'Berlin HQ'),
         makeEvent('b', 'Remote Call'),
       );
-      expect(uids(filter.filter(cal, [{ property: 'LOCATION', pattern: /Berlin/ }]))).toEqual(['b']);
+      expect(uids(filter.filter(cal, [{ property: 'LOCATION', pattern: /Berlin/ }]))).toEqual([
+        'b',
+      ]);
     });
 
     it('removes events matching any of multiple criteria', () => {
@@ -90,10 +97,9 @@ describe('EventFilter', () => {
         properties: [{ name: 'TZID', params: {}, value: 'Europe/Berlin' }],
         components: [],
       };
-      const result = filter.filter(
-        makeCalendar(tz, makeEvent('a', 'Meeting')),
-        [{ property: 'SUMMARY', pattern: /Meeting/ }],
-      );
+      const result = filter.filter(makeCalendar(tz, makeEvent('a', 'Meeting')), [
+        { property: 'SUMMARY', pattern: /Meeting/ },
+      ]);
       expect(result.components).toHaveLength(1);
       expect(result.components[0]!.name).toBe('VTIMEZONE');
     });

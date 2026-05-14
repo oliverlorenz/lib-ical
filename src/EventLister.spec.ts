@@ -90,28 +90,39 @@ describe('EventLister', () => {
 
   describe('recurring events', () => {
     it('returns one occurrence per matching day for a daily event', () => {
-      const bigRange = { from: new Date('2024-01-13T00:00:00Z'), to: new Date('2024-01-18T00:00:00Z') };
-      const cal = makeCalendar(makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+      const bigRange = {
+        from: new Date('2024-01-13T00:00:00Z'),
+        to: new Date('2024-01-18T00:00:00Z'),
+      };
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+      );
       const results = lister.list(cal, bigRange.from, bigRange.to);
       expect(results).toHaveLength(5);
     });
 
     it('sets concrete DTSTART on each occurrence', () => {
-      const cal = makeCalendar(makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+      );
       const results = lister.list(cal, from, to);
       expect(results).toHaveLength(1);
       expect(dtstart(results[0]!)).toBe('20240115T090000Z');
     });
 
     it('adds RECURRENCE-ID to each occurrence', () => {
-      const cal = makeCalendar(makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+      );
       const results = lister.list(cal, from, to);
       const recurrenceId = results[0]!.properties.find((p) => p.name === 'RECURRENCE-ID');
       expect(recurrenceId?.value).toBe('20240115T090000Z');
     });
 
     it('strips RRULE from each occurrence', () => {
-      const cal = makeCalendar(makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+      );
       const results = lister.list(cal, from, to);
       expect(results[0]!.properties.find((p) => p.name === 'RRULE')).toBeUndefined();
     });
@@ -134,15 +145,22 @@ describe('EventLister', () => {
 
     it('includes a weekly recurring event on the matching weekday', () => {
       // Mondays, Jan 15 2024 is a Monday
-      const cal = makeCalendar(makeRecurring('weekly', '20240101T090000Z', '20240101T100000Z', 'FREQ=WEEKLY;BYDAY=MO'));
+      const cal = makeCalendar(
+        makeRecurring('weekly', '20240101T090000Z', '20240101T100000Z', 'FREQ=WEEKLY;BYDAY=MO'),
+      );
       const results = lister.list(cal, from, to);
       expect(results).toHaveLength(1);
       expect(dtstart(results[0]!)).toBe('20240115T090000Z');
     });
 
     it('includes a yearly event when its anniversary falls in range', () => {
-      const yearRange = { from: new Date('2024-01-01T00:00:00Z'), to: new Date('2025-01-01T00:00:00Z') };
-      const cal = makeCalendar(makeRecurring('yearly', '20200115T120000Z', '20200115T130000Z', 'FREQ=YEARLY'));
+      const yearRange = {
+        from: new Date('2024-01-01T00:00:00Z'),
+        to: new Date('2025-01-01T00:00:00Z'),
+      };
+      const cal = makeCalendar(
+        makeRecurring('yearly', '20200115T120000Z', '20200115T130000Z', 'FREQ=YEARLY'),
+      );
       const results = lister.list(cal, yearRange.from, yearRange.to);
       expect(results).toHaveLength(1);
       expect(dtstart(results[0]!)).toBe('20240115T120000Z');
@@ -150,7 +168,9 @@ describe('EventLister', () => {
 
     it('includes a recurring occurrence that starts before range and ends within', () => {
       // Event: 23:00–01:00, daily. Jan 14 23:00 overlaps with Jan 15 range.
-      const cal = makeCalendar(makeRecurring('overnight', '20240101T230000Z', '20240102T010000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('overnight', '20240101T230000Z', '20240102T010000Z', 'FREQ=DAILY'),
+      );
       const results = lister.list(cal, from, to);
       const starts = results.map(dtstart);
       expect(starts).toContain('20240114T230000Z');

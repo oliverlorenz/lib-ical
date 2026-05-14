@@ -171,7 +171,9 @@ describe('CalendarInverter', () => {
   describe('free event properties', () => {
     it('sets SUMMARY to "Free" on each free event', () => {
       const result = inverter.invert(makeCalendar(), from, to);
-      expect(freeEvents(result)[0]!.properties.find((p) => p.name === 'SUMMARY')?.value).toBe('Free');
+      expect(freeEvents(result)[0]!.properties.find((p) => p.name === 'SUMMARY')?.value).toBe(
+        'Free',
+      );
     });
 
     it('sets a unique UID on each free event based on its start time', () => {

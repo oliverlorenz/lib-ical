@@ -5,10 +5,7 @@ import { RRuleExpander } from './RRuleExpander';
 export class RangeCleaner {
   constructor(private readonly rruleExpander: RRuleExpander = new RRuleExpander()) {}
 
-  public cleanRanges(
-    component: ICalComponent,
-    ranges: ReadonlyArray<[Date, Date]>,
-  ): ICalComponent {
+  public cleanRanges(component: ICalComponent, ranges: ReadonlyArray<[Date, Date]>): ICalComponent {
     return ranges.reduce((acc, [start, end]) => this.clean(acc, start, end), component);
   }
 
@@ -21,11 +18,7 @@ export class RangeCleaner {
     };
   }
 
-  private processEvent(
-    event: ICalComponent,
-    rangeStart: Date,
-    rangeEnd: Date,
-  ): ICalComponent[] {
+  private processEvent(event: ICalComponent, rangeStart: Date, rangeEnd: Date): ICalComponent[] {
     const rruleProp = event.properties.find((p) => p.name === 'RRULE');
     if (rruleProp) {
       return this.processRecurringEvent(event, rruleProp.value, rangeStart, rangeEnd);
@@ -114,12 +107,20 @@ export class RangeCleaner {
       const key = formatUtcDatetime(occ).substring(0, 15); // YYYYMMDDTHHmmss
 
       if (occ < rangeStart && occEnd > rangeEnd) {
-        exceptions.push(RangeCleaner.makeException(event, `${baseUid}-${key}-1`, occ, new Date(rangeStart)));
-        exceptions.push(RangeCleaner.makeException(event, `${baseUid}-${key}-2`, new Date(rangeEnd), occEnd));
+        exceptions.push(
+          RangeCleaner.makeException(event, `${baseUid}-${key}-1`, occ, new Date(rangeStart)),
+        );
+        exceptions.push(
+          RangeCleaner.makeException(event, `${baseUid}-${key}-2`, new Date(rangeEnd), occEnd),
+        );
       } else if (occ < rangeStart) {
-        exceptions.push(RangeCleaner.makeException(event, `${baseUid}-${key}-1`, occ, new Date(rangeStart)));
+        exceptions.push(
+          RangeCleaner.makeException(event, `${baseUid}-${key}-1`, occ, new Date(rangeStart)),
+        );
       } else {
-        exceptions.push(RangeCleaner.makeException(event, `${baseUid}-${key}-1`, new Date(rangeEnd), occEnd));
+        exceptions.push(
+          RangeCleaner.makeException(event, `${baseUid}-${key}-1`, new Date(rangeEnd), occEnd),
+        );
       }
     }
 
@@ -131,9 +132,7 @@ export class RangeCleaner {
   // ── Static helpers ────────────────────────────────────────────────────────
 
   private static impliedEnd(dtStartValue: string, start: Date): Date {
-    return /^\d{8}$/.test(dtStartValue)
-      ? new Date(start.getTime() + 24 * 60 * 60 * 1000)
-      : start;
+    return /^\d{8}$/.test(dtStartValue) ? new Date(start.getTime() + 24 * 60 * 60 * 1000) : start;
   }
 
   private static withDtEnd(event: ICalComponent, end: Date): ICalComponent {

@@ -1,4 +1,5 @@
 import { BusyTimeCounter } from './BusyTimeCounter';
+import { CalendarInverter } from './CalendarInverter';
 import { ICalComponent } from './types';
 
 const counter = new BusyTimeCounter();
@@ -77,7 +78,27 @@ describe('BusyTimeCounter', () => {
 
   it('counts busy time from a recurring event correctly', () => {
     // Daily standup 09:00–09:30, one occurrence on Jan 15 → 30min
-    const cal = makeCalendar(makeRecurring('standup', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+    const cal = makeCalendar(
+      makeRecurring('standup', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+    );
     expect(counter.count(cal, from, to)).toBe(30 * 60 * 1000);
+  });
+
+  it('ignores slots returned by CalendarInverter that have no parseable DTSTART or DTEND', () => {
+    const eventWithoutDates: ICalComponent = {
+      name: 'VEVENT',
+      properties: [{ name: 'SUMMARY', params: {}, value: 'No dates' }],
+      components: [],
+    };
+    const mockInverter = {
+      invert: (): ICalComponent => ({
+        name: 'VCALENDAR',
+        properties: [],
+        components: [eventWithoutDates],
+      }),
+    } as unknown as CalendarInverter;
+    const counterWithMock = new BusyTimeCounter(mockInverter);
+    // No parseable free slots → busy time = total window
+    expect(counterWithMock.count(makeCalendar(), from, to)).toBe(to.getTime() - from.getTime());
   });
 });

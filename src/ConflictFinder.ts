@@ -15,9 +15,11 @@ export class ConflictFinder {
     const conflicts: ConflictPair[] = [];
 
     for (let i = 0; i < events.length; i++) {
+      const eventI = events[i] as ICalComponent;
       for (let j = i + 1; j < events.length; j++) {
-        if (this.overlaps(events[i]!, events[j]!)) {
-          conflicts.push({ first: events[i]!, second: events[j]! });
+        const eventJ = events[j] as ICalComponent;
+        if (this.overlaps(eventI, eventJ)) {
+          conflicts.push({ first: eventI, second: eventJ });
         }
       }
     }

@@ -6,7 +6,10 @@ export interface EventFilterCriteria {
 }
 
 export class EventFilter {
-  public filter(component: ICalComponent, criteria: ReadonlyArray<EventFilterCriteria>): ICalComponent {
+  public filter(
+    component: ICalComponent,
+    criteria: ReadonlyArray<EventFilterCriteria>,
+  ): ICalComponent {
     if (criteria.length === 0) return component;
     return {
       ...component,
@@ -16,7 +19,10 @@ export class EventFilter {
     };
   }
 
-  public keep(component: ICalComponent, criteria: ReadonlyArray<EventFilterCriteria>): ICalComponent {
+  public keep(
+    component: ICalComponent,
+    criteria: ReadonlyArray<EventFilterCriteria>,
+  ): ICalComponent {
     if (criteria.length === 0) return component;
     return {
       ...component,
@@ -26,7 +32,10 @@ export class EventFilter {
     };
   }
 
-  private eventMatches(event: ICalComponent, criteria: ReadonlyArray<EventFilterCriteria>): boolean {
+  private eventMatches(
+    event: ICalComponent,
+    criteria: ReadonlyArray<EventFilterCriteria>,
+  ): boolean {
     return criteria.some(({ property, pattern }) =>
       event.properties
         .filter((p) => property === undefined || p.name === property)

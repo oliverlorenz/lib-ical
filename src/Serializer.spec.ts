@@ -41,7 +41,9 @@ describe('Serializer', () => {
       components: [],
     };
 
-    expect(serializer.serialize(calendar)).toContain('DTSTART;TZID=America/New_York:19970714T170000');
+    expect(serializer.serialize(calendar)).toContain(
+      'DTSTART;TZID=America/New_York:19970714T170000',
+    );
   });
 
   it('folds lines longer than 75 characters', () => {

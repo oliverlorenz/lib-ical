@@ -129,9 +129,44 @@ describe('RangeCleaner', () => {
     });
   });
 
+  describe('events without DTEND', () => {
+    it('removes an all-day event without DTEND that falls within the range (implied 1-day duration)', () => {
+      const fullDayRange = {
+        start: new Date('2024-01-15T00:00:00Z'),
+        end: new Date('2024-01-16T00:00:00Z'),
+      };
+      const event: ICalComponent = {
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'allday' },
+          { name: 'DTSTART', params: {}, value: '20240115' },
+        ],
+        components: [],
+      };
+      expect(
+        uids(cleaner.clean(makeCalendar(event), fullDayRange.start, fullDayRange.end)),
+      ).toEqual([]);
+    });
+
+    it('keeps a datetime event without DTEND that falls outside the range (implied 0 duration)', () => {
+      const event: ICalComponent = {
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'nodtend' },
+          { name: 'DTSTART', params: {}, value: '20240115T080000Z' },
+        ],
+        components: [],
+      };
+      expect(uids(cleaner.clean(makeCalendar(event), rangeStart, rangeEnd))).toEqual(['nodtend']);
+    });
+  });
+
   describe('all-day events', () => {
     it('removes an all-day event whose implied range is fully within the clean range', () => {
-      const fullDayRange = { start: new Date('2024-01-15T00:00:00Z'), end: new Date('2024-01-16T00:00:00Z') };
+      const fullDayRange = {
+        start: new Date('2024-01-15T00:00:00Z'),
+        end: new Date('2024-01-16T00:00:00Z'),
+      };
       const cal = makeCalendar(makeEvent('a', '20240115', '20240116'));
       expect(uids(cleaner.clean(cal, fullDayRange.start, fullDayRange.end))).toEqual([]);
     });
@@ -194,7 +229,12 @@ describe('RangeCleaner', () => {
   });
 
   describe('recurring events (RRULE)', () => {
-    function makeRecurring(uid: string, dtstart: string, dtend: string, rrule: string): ICalComponent {
+    function makeRecurring(
+      uid: string,
+      dtstart: string,
+      dtend: string,
+      rrule: string,
+    ): ICalComponent {
       return {
         name: 'VEVENT',
         properties: [
@@ -218,28 +258,38 @@ describe('RangeCleaner', () => {
 
     it('adds EXDATE for an occurrence fully within the range', () => {
       // Daily standup at 11:00; one occurrence on Jan 15 falls in 10:00–12:00
-      const cal = makeCalendar(makeRecurring('standup', '20240101T110000Z', '20240101T113000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('standup', '20240101T110000Z', '20240101T113000Z', 'FREQ=DAILY'),
+      );
       const result = cleaner.clean(cal, rangeStart, rangeEnd);
       expect(exdates(result, 'standup')).toContain('20240115T110000Z');
     });
 
     it('keeps the base VEVENT with RRULE intact (series continues outside range)', () => {
-      const cal = makeCalendar(makeRecurring('standup', '20240101T110000Z', '20240101T113000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('standup', '20240101T110000Z', '20240101T113000Z', 'FREQ=DAILY'),
+      );
       const result = cleaner.clean(cal, rangeStart, rangeEnd);
-      const base = result.components.find((c) => c.properties.find((p) => p.name === 'UID')?.value === 'standup');
+      const base = result.components.find(
+        (c) => c.properties.find((p) => p.name === 'UID')?.value === 'standup',
+      );
       expect(base?.properties.find((p) => p.name === 'RRULE')).toBeDefined();
     });
 
     it('does not add EXDATE for occurrences outside the range', () => {
       // Occurrence on Jan 14 and Jan 16 are outside the Jan 15 10:00–12:00 range
-      const cal = makeCalendar(makeRecurring('standup', '20240101T080000Z', '20240101T083000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('standup', '20240101T080000Z', '20240101T083000Z', 'FREQ=DAILY'),
+      );
       const result = cleaner.clean(cal, rangeStart, rangeEnd);
       expect(exdates(result, 'standup')).toHaveLength(0);
     });
 
     it('clips occurrence that starts before range and ends within — adds EXDATE + exception', () => {
       // Occurrence on Jan 15: 09:00–11:00, range is 10:00–12:00
-      const cal = makeCalendar(makeRecurring('meeting', '20240101T090000Z', '20240101T110000Z', 'FREQ=WEEKLY;BYDAY=MO'));
+      const cal = makeCalendar(
+        makeRecurring('meeting', '20240101T090000Z', '20240101T110000Z', 'FREQ=WEEKLY;BYDAY=MO'),
+      );
       const result = cleaner.clean(cal, rangeStart, rangeEnd);
       expect(exdates(result, 'meeting')).toContain('20240115T090000Z');
       // Exception event ends at rangeStart
@@ -252,7 +302,9 @@ describe('RangeCleaner', () => {
 
     it('clips occurrence that starts within range and ends after — adds EXDATE + exception', () => {
       // Occurrence on Jan 15: 11:00–13:00, range is 10:00–12:00
-      const cal = makeCalendar(makeRecurring('meeting', '20240101T110000Z', '20240101T130000Z', 'FREQ=WEEKLY;BYDAY=MO'));
+      const cal = makeCalendar(
+        makeRecurring('meeting', '20240101T110000Z', '20240101T130000Z', 'FREQ=WEEKLY;BYDAY=MO'),
+      );
       const result = cleaner.clean(cal, rangeStart, rangeEnd);
       expect(exdates(result, 'meeting')).toContain('20240115T110000Z');
       const exception = result.components.find(
@@ -263,7 +315,9 @@ describe('RangeCleaner', () => {
 
     it('splits occurrence spanning entire range — adds EXDATE + two exceptions', () => {
       // Occurrence on Jan 15: 08:00–14:00, range is 10:00–12:00
-      const cal = makeCalendar(makeRecurring('block', '20240101T080000Z', '20240101T140000Z', 'FREQ=WEEKLY;BYDAY=MO'));
+      const cal = makeCalendar(
+        makeRecurring('block', '20240101T080000Z', '20240101T140000Z', 'FREQ=WEEKLY;BYDAY=MO'),
+      );
       const result = cleaner.clean(cal, rangeStart, rangeEnd);
       expect(exdates(result, 'block')).toContain('20240115T080000Z');
       const before = result.components.find(
@@ -278,8 +332,13 @@ describe('RangeCleaner', () => {
 
     it('handles multiple occurrences in range', () => {
       // Daily event 11:00–11:30, range spans Jan 13–17
-      const bigRange = { start: new Date('2024-01-13T00:00:00Z'), end: new Date('2024-01-17T23:59:59Z') };
-      const cal = makeCalendar(makeRecurring('daily', '20240101T110000Z', '20240101T113000Z', 'FREQ=DAILY'));
+      const bigRange = {
+        start: new Date('2024-01-13T00:00:00Z'),
+        end: new Date('2024-01-17T23:59:59Z'),
+      };
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T110000Z', '20240101T113000Z', 'FREQ=DAILY'),
+      );
       const result = cleaner.clean(cal, bigRange.start, bigRange.end);
       expect(exdates(result, 'daily')).toHaveLength(5);
     });

@@ -1,4 +1,5 @@
 import { FreeSlotFinder } from './FreeSlotFinder';
+import { CalendarInverter } from './CalendarInverter';
 import { ICalComponent } from './types';
 
 const finder = new FreeSlotFinder();
@@ -23,12 +24,16 @@ function makeCalendar(...events: ICalComponent[]): ICalComponent {
 }
 
 function slotDurationMs(slot: ICalComponent): number {
-  const start = new Date(slot.properties.find((p) => p.name === 'DTSTART')!.value.replace(
-    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z',
-  ));
-  const end = new Date(slot.properties.find((p) => p.name === 'DTEND')!.value.replace(
-    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z',
-  ));
+  const start = new Date(
+    slot.properties
+      .find((p) => p.name === 'DTSTART')!
+      .value.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z'),
+  );
+  const end = new Date(
+    slot.properties
+      .find((p) => p.name === 'DTEND')!
+      .value.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z'),
+  );
   return end.getTime() - start.getTime();
 }
 
@@ -81,6 +86,25 @@ describe('FreeSlotFinder', () => {
     it('returns all slots when minDurationMs is 0', () => {
       const cal = makeCalendar(makeEvent('a', '20240115T100000Z', '20240115T110000Z'));
       expect(finder.find(cal, from, to, 0)).toHaveLength(2);
+    });
+  });
+
+  describe('events without parseable dates', () => {
+    it('skips slots returned by CalendarInverter that have no parseable DTSTART or DTEND', () => {
+      const eventWithoutDates: ICalComponent = {
+        name: 'VEVENT',
+        properties: [{ name: 'SUMMARY', params: {}, value: 'No dates' }],
+        components: [],
+      };
+      const mockInverter = {
+        invert: (): ICalComponent => ({
+          name: 'VCALENDAR',
+          properties: [],
+          components: [eventWithoutDates],
+        }),
+      } as unknown as CalendarInverter;
+      const finderWithMock = new FreeSlotFinder(mockInverter);
+      expect(finderWithMock.find(makeCalendar(), from, to)).toHaveLength(0);
     });
   });
 });

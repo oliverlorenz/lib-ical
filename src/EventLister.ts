@@ -40,7 +40,12 @@ export class EventLister {
 
   // ── Recurring ─────────────────────────────────────────────────────────────
 
-  private expandRecurring(event: ICalComponent, rrule: string, from: Date, to: Date): ICalComponent[] {
+  private expandRecurring(
+    event: ICalComponent,
+    rrule: string,
+    from: Date,
+    to: Date,
+  ): ICalComponent[] {
     const dtStartProp = event.properties.find((p) => p.name === 'DTSTART');
     const dtEndProp = event.properties.find((p) => p.name === 'DTEND');
     if (!dtStartProp) return [];
@@ -105,8 +110,6 @@ export class EventLister {
   }
 
   private static impliedEnd(dtStartValue: string, start: Date): Date {
-    return /^\d{8}$/.test(dtStartValue)
-      ? new Date(start.getTime() + 24 * 60 * 60 * 1000)
-      : start;
+    return /^\d{8}$/.test(dtStartValue) ? new Date(start.getTime() + 24 * 60 * 60 * 1000) : start;
   }
 }

@@ -65,19 +65,25 @@ describe('RecurringExpander', () => {
   describe('recurring events', () => {
     it('replaces a weekly event with concrete occurrences in range', () => {
       // Every Monday in January 2024: Jan 1, 8, 15, 22, 29
-      const cal = makeCalendar(makeRecurring('weekly', '20240101T090000Z', '20240101T100000Z', 'FREQ=WEEKLY;BYDAY=MO'));
+      const cal = makeCalendar(
+        makeRecurring('weekly', '20240101T090000Z', '20240101T100000Z', 'FREQ=WEEKLY;BYDAY=MO'),
+      );
       const result = expander.expand(cal, from, to);
       expect(vevents(result)).toHaveLength(5);
     });
 
     it('removes RRULE from expanded occurrences', () => {
-      const cal = makeCalendar(makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+      );
       const result = expander.expand(cal, from, to);
       vevents(result).forEach((e) => expect(prop(e, 'RRULE')).toBeUndefined());
     });
 
     it('sets concrete DTSTART on each occurrence', () => {
-      const cal = makeCalendar(makeRecurring('weekly', '20240101T090000Z', '20240101T100000Z', 'FREQ=WEEKLY;BYDAY=MO'));
+      const cal = makeCalendar(
+        makeRecurring('weekly', '20240101T090000Z', '20240101T100000Z', 'FREQ=WEEKLY;BYDAY=MO'),
+      );
       const starts = vevents(expander.expand(cal, from, to)).map((e) => prop(e, 'DTSTART'));
       expect(starts).toContain('20240101T090000Z');
       expect(starts).toContain('20240108T090000Z');
@@ -85,7 +91,9 @@ describe('RecurringExpander', () => {
     });
 
     it('adds RECURRENCE-ID to each occurrence', () => {
-      const cal = makeCalendar(makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('daily', '20240101T090000Z', '20240101T093000Z', 'FREQ=DAILY'),
+      );
       const result = vevents(expander.expand(cal, from, to));
       result.forEach((e) => expect(prop(e, 'RECURRENCE-ID')).toBeDefined());
     });
@@ -109,7 +117,9 @@ describe('RecurringExpander', () => {
 
     it('produces no occurrences for a recurring event with no matches in range', () => {
       // Starts in 2025, range is January 2024
-      const cal = makeCalendar(makeRecurring('future', '20250101T090000Z', '20250101T100000Z', 'FREQ=DAILY'));
+      const cal = makeCalendar(
+        makeRecurring('future', '20250101T090000Z', '20250101T100000Z', 'FREQ=DAILY'),
+      );
       expect(vevents(expander.expand(cal, from, to))).toHaveLength(0);
     });
   });

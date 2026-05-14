@@ -3,10 +3,7 @@ import * as path from 'path';
 import { Calendar } from './Calendar';
 import { ICalComponent } from './types';
 
-const icsContent = fs.readFileSync(
-  path.join(__dirname, 'mocks', 'calendar.ics'),
-  'utf-8',
-);
+const icsContent = fs.readFileSync(path.join(__dirname, 'mocks', 'calendar.ics'), 'utf-8');
 
 // UIDs from the fixture file
 const UID_TZID_VALARM = '8fcbcf89-c585-4f0a-8890-2807e1386512'; // TZID event with VALARM
@@ -68,7 +65,9 @@ describe('Calendar integration (calendar.ics)', () => {
       const event = findEvent(component, UID_TZID_VALARM)!;
       expect(event).toBeDefined();
       expect(event.properties.find((p) => p.name === 'DTSTART')?.value).toBe('20250307T140000');
-      expect(event.properties.find((p) => p.name === 'DTSTART')?.params['TZID']).toBe('Europe/Berlin');
+      expect(event.properties.find((p) => p.name === 'DTSTART')?.params['TZID']).toBe(
+        'Europe/Berlin',
+      );
       expect(event.properties.find((p) => p.name === 'SUMMARY')?.value).toBe('Event');
     });
 
@@ -110,15 +109,17 @@ describe('Calendar integration (calendar.ics)', () => {
 
       expect(eventCount(reparsed)).toBe(246);
       expect(findEvent(reparsed, UID_TZID_VALARM)).toBeDefined();
-      expect(findEvent(reparsed, UID_BIWEEKLY_FRIDAY)?.properties.find((p) => p.name === 'RRULE')?.value).toBe(
-        'FREQ=WEEKLY;INTERVAL=2;BYDAY=FR',
-      );
+      expect(
+        findEvent(reparsed, UID_BIWEEKLY_FRIDAY)?.properties.find((p) => p.name === 'RRULE')?.value,
+      ).toBe('FREQ=WEEKLY;INTERVAL=2;BYDAY=FR');
     });
 
     it('preserves TZID parameters after round-trip', () => {
       const reparsed = calendar.parse(calendar.serialize(component));
       const event = findEvent(reparsed, UID_TZID_VALARM)!;
-      expect(event.properties.find((p) => p.name === 'DTSTART')?.params['TZID']).toBe('Europe/Berlin');
+      expect(event.properties.find((p) => p.name === 'DTSTART')?.params['TZID']).toBe(
+        'Europe/Berlin',
+      );
     });
 
     it('preserves VALUE=DATE parameters after round-trip', () => {
@@ -262,7 +263,11 @@ describe('Calendar integration (calendar.ics)', () => {
     });
 
     it('does not mutate the original component', () => {
-      calendar.cleanRange(component, new Date('2026-02-03T09:00:00Z'), new Date('2026-02-03T11:00:00Z'));
+      calendar.cleanRange(
+        component,
+        new Date('2026-02-03T09:00:00Z'),
+        new Date('2026-02-03T11:00:00Z'),
+      );
       expect(findEvent(component, UID_SINGLE)).toBeDefined();
     });
   });

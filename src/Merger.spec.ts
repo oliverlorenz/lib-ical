@@ -70,6 +70,21 @@ describe('Merger', () => {
     expect(first.components).toHaveLength(1);
   });
 
+  it('filters out a VTIMEZONE component that has no TZID property', () => {
+    const noTzid: ICalComponent = { name: 'VTIMEZONE', properties: [], components: [] };
+    const cal: ICalComponent = {
+      name: 'VCALENDAR',
+      properties: [],
+      components: [
+        noTzid,
+        { name: 'VEVENT', properties: [{ name: 'UID', params: {}, value: 'e' }], components: [] },
+      ],
+    };
+    const result = merger.merge(cal);
+    expect(result.components.filter((c) => c.name === 'VTIMEZONE')).toHaveLength(0);
+    expect(result.components.filter((c) => c.name === 'VEVENT')).toHaveLength(1);
+  });
+
   it('returns a copy when called with a single calendar', () => {
     const first = makeCalendar('a');
     const result = merger.merge(first);

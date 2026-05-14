@@ -67,6 +67,29 @@ describe('Parser', () => {
     expect(parser.parse(input).properties[0]!.value).toBe('2.0');
   });
 
+  it('parses a property with a quoted parameter containing a colon', () => {
+    const input = [
+      'BEGIN:VCALENDAR',
+      'DTSTART;X-PARAM="val:ue":20240101T100000Z',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const result = parser.parse(input);
+    expect(result.properties[0]!.name).toBe('DTSTART');
+    expect(result.properties[0]!.value).toBe('20240101T100000Z');
+  });
+
+  it('throws when a line has no colon', () => {
+    expect(() =>
+      parser.parse(['BEGIN:VCALENDAR', 'NOCOLON', 'END:VCALENDAR'].join('\r\n')),
+    ).toThrow('Invalid iCal line (no colon found): NOCOLON');
+  });
+
+  it('throws when a property appears before any BEGIN', () => {
+    expect(() => parser.parse('SUMMARY:orphan\r\nBEGIN:VCALENDAR\r\nEND:VCALENDAR')).toThrow(
+      'Property outside component',
+    );
+  });
+
   it('throws on mismatched END', () => {
     expect(() => parser.parse('BEGIN:VCALENDAR\r\nEND:VEVENT')).toThrow('Mismatched END:VEVENT');
   });

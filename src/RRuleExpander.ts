@@ -1,7 +1,13 @@
 import { parseDatetimeValue } from './datetime';
 
 const BYDAY_MAP: Record<string, number> = {
-  SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6,
+  SU: 0,
+  MO: 1,
+  TU: 2,
+  WE: 3,
+  TH: 4,
+  FR: 5,
+  SA: 6,
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -50,9 +56,7 @@ function parseRRule(rrule: string): ParsedRRule {
 export class RRuleExpander {
   public expand(dtstart: Date, rrule: string, from: Date, to: Date): Date[] {
     const rule = parseRRule(rrule);
-    const effectiveTo = rule.until
-      ? new Date(Math.min(to.getTime(), rule.until.getTime()))
-      : to;
+    const effectiveTo = rule.until ? new Date(Math.min(to.getTime(), rule.until.getTime())) : to;
 
     const results: Date[] = [];
     if (rule.freq === 'DAILY') this.expandDaily(dtstart, rule, from, effectiveTo, results);
@@ -62,12 +66,24 @@ export class RRuleExpander {
     return results;
   }
 
-  private record(results: Date[], rule: ParsedRRule, candidate: Date, from: Date, to: Date): boolean {
+  private record(
+    results: Date[],
+    rule: ParsedRRule,
+    candidate: Date,
+    from: Date,
+    to: Date,
+  ): boolean {
     if (candidate >= from && candidate <= to) results.push(new Date(candidate));
     return rule.count !== undefined && results.length >= rule.count;
   }
 
-  private expandDaily(dtstart: Date, rule: ParsedRRule, from: Date, to: Date, results: Date[]): void {
+  private expandDaily(
+    dtstart: Date,
+    rule: ParsedRRule,
+    from: Date,
+    to: Date,
+    results: Date[],
+  ): void {
     let current = new Date(dtstart);
     while (current <= to && results.length < MAX_OCCURRENCES) {
       if (this.record(results, rule, current, from, to)) return;
@@ -75,7 +91,13 @@ export class RRuleExpander {
     }
   }
 
-  private expandWeekly(dtstart: Date, rule: ParsedRRule, from: Date, to: Date, results: Date[]): void {
+  private expandWeekly(
+    dtstart: Date,
+    rule: ParsedRRule,
+    from: Date,
+    to: Date,
+    results: Date[],
+  ): void {
     const byday = rule.byday.length > 0 ? rule.byday : [dtstart.getUTCDay()];
     const sorted = byday.slice().sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
 
@@ -90,8 +112,12 @@ export class RRuleExpander {
         const dFM = dayNum === 0 ? 6 : dayNum - 1;
         const candidate = new Date(
           Date.UTC(
-            weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate() + dFM,
-            dtstart.getUTCHours(), dtstart.getUTCMinutes(), dtstart.getUTCSeconds(),
+            weekStart.getUTCFullYear(),
+            weekStart.getUTCMonth(),
+            weekStart.getUTCDate() + dFM,
+            dtstart.getUTCHours(),
+            dtstart.getUTCMinutes(),
+            dtstart.getUTCSeconds(),
           ),
         );
         if (candidate < dtstart) continue;
@@ -101,7 +127,13 @@ export class RRuleExpander {
     }
   }
 
-  private expandMonthly(dtstart: Date, rule: ParsedRRule, from: Date, to: Date, results: Date[]): void {
+  private expandMonthly(
+    dtstart: Date,
+    rule: ParsedRRule,
+    from: Date,
+    to: Date,
+    results: Date[],
+  ): void {
     const days = rule.bymonthday.length > 0 ? rule.bymonthday : [dtstart.getUTCDate()];
     let year = dtstart.getUTCFullYear();
     let month = dtstart.getUTCMonth();
@@ -110,25 +142,45 @@ export class RRuleExpander {
       if (new Date(Date.UTC(year, month, 1)) > to) break;
       for (const day of days) {
         const candidate = new Date(
-          Date.UTC(year, month, day, dtstart.getUTCHours(), dtstart.getUTCMinutes(), dtstart.getUTCSeconds()),
+          Date.UTC(
+            year,
+            month,
+            day,
+            dtstart.getUTCHours(),
+            dtstart.getUTCMinutes(),
+            dtstart.getUTCSeconds(),
+          ),
         );
         if (candidate.getUTCMonth() !== month) continue; // invalid date (e.g. Feb 30)
         if (candidate < dtstart) continue;
         if (this.record(results, rule, candidate, from, to)) return;
       }
       month += rule.interval;
-      if (month >= 12) { year += Math.floor(month / 12); month %= 12; }
+      if (month >= 12) {
+        year += Math.floor(month / 12);
+        month %= 12;
+      }
     }
   }
 
-  private expandYearly(dtstart: Date, rule: ParsedRRule, from: Date, to: Date, results: Date[]): void {
+  private expandYearly(
+    dtstart: Date,
+    rule: ParsedRRule,
+    from: Date,
+    to: Date,
+    results: Date[],
+  ): void {
     let current = new Date(dtstart);
     while (current <= to && results.length < MAX_OCCURRENCES) {
       if (this.record(results, rule, current, from, to)) return;
       current = new Date(
         Date.UTC(
-          current.getUTCFullYear() + rule.interval, current.getUTCMonth(), current.getUTCDate(),
-          current.getUTCHours(), current.getUTCMinutes(), current.getUTCSeconds(),
+          current.getUTCFullYear() + rule.interval,
+          current.getUTCMonth(),
+          current.getUTCDate(),
+          current.getUTCHours(),
+          current.getUTCMinutes(),
+          current.getUTCSeconds(),
         ),
       );
     }

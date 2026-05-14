@@ -13,9 +13,9 @@ export class FreeSlotFinder {
   ): ICalComponent[] {
     const antiCal = this.inverter.invert(component, from, to);
     return antiCal.components.filter((c) => {
-      // CalendarInverter always emits VEVENTs with valid DTSTART/DTEND via formatUtcDatetime
-      const start = parseDatetimeValue(c.properties.find((p) => p.name === 'DTSTART')!.value)!;
-      const end = parseDatetimeValue(c.properties.find((p) => p.name === 'DTEND')!.value)!;
+      const start = parseDatetimeValue(c.properties.find((p) => p.name === 'DTSTART')?.value ?? '');
+      const end = parseDatetimeValue(c.properties.find((p) => p.name === 'DTEND')?.value ?? '');
+      if (!start || !end) return false;
       return end.getTime() - start.getTime() >= minDurationMs;
     });
   }
