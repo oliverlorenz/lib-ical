@@ -4,6 +4,8 @@ import tsParser from "@typescript-eslint/parser";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { FlatCompat } from "@eslint/eslintrc";
+import checkFileEslint from "eslint-plugin-check-file";
+import noOnlyTests from "eslint-plugin-no-only-tests";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +18,8 @@ export default [{
 }, ...compat.extends("prettier"), {
     plugins: {
         "@typescript-eslint": typescriptEslint,
+        "check-file": checkFileEslint,
+        "no-only-tests": noOnlyTests,
     },
 
     languageOptions: {
@@ -29,7 +33,7 @@ export default [{
         sourceType: "module",
 
         parserOptions: {
-            project: "tsconfig.json",
+            project: "tsconfig.test.json",
         },
     },
 
@@ -54,11 +58,18 @@ export default [{
             argsIgnorePattern: "^_",
             varsIgnorePattern: "^_",
         }],
+
+        "check-file/filename-naming-convention": ["error", {
+            "src/**/[A-Z]*.ts": "PASCAL_CASE",
+        }, {
+            ignoreMiddleExtensions: true,
+        }],
     },
 }, {
     files: ["**/*.spec.ts"],
 
     rules: {
         "@typescript-eslint/no-non-null-assertion": "off",
+        "no-only-tests/no-only-tests": "error",
     },
 }];

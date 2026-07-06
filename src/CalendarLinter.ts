@@ -25,10 +25,7 @@ const missingLocationRule: LintRule = {
   message: 'Event has no location',
 };
 
-export const defaultLintRules: ReadonlyArray<LintRule> = [
-  missingAttendeesRule,
-  missingLocationRule,
-];
+const defaultLintRules: ReadonlyArray<LintRule> = [missingAttendeesRule, missingLocationRule];
 
 export class CalendarLinter {
   public lint(

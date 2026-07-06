@@ -1,4 +1,7 @@
 **
-!/dist/**
-**.test.*
-README.md
+!dist/**
+*.spec.js
+*.spec.d.ts
+*.spec.d.ts.map
+.husky/
+*.tgz
