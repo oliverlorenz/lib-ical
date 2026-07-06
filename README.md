@@ -18,6 +18,7 @@ A lightweight TypeScript library for parsing, serializing, and manipulating iCal
 - Find free time slots in a calendar window
 - Count total busy time within a window
 - Invert a calendar to produce a free-time calendar
+- Lint events for quality issues (missing attendees/location, extensible rule set)
 
 ## Requirements
 
@@ -60,6 +61,7 @@ Runnable examples are in the [examples/](examples/) folder. Each example imports
 | [06-free-slots-and-busy-time.ts](examples/06-free-slots-and-busy-time.ts) | Find open slots with `findFreeSlots`, measure load with `countBusyTime`, invert a calendar |
 | [07-find-conflicts.ts](examples/07-find-conflicts.ts) | Detect overlapping events with `findConflicts` |
 | [08-diff-calendars.ts](examples/08-diff-calendars.ts) | Compare two calendar versions with `diff` |
+| [09-lint-calendar.ts](examples/09-lint-calendar.ts) | Flag events with missing attendees/location using `lint` |
 
 ## API
 
@@ -305,6 +307,34 @@ Returns a new `VCALENDAR` whose `VEVENT` components represent the free gaps betw
 ```typescript
 const freeCal = calendar.invert(component, from, to);
 // freeCal.components contains VEVENT entries for each unbooked interval
+```
+
+### `calendar.lint(component, rules?: ReadonlyArray<LintRule>): LintIssue[]`
+
+Checks every `VEVENT` in the component tree against a set of rules and returns one `LintIssue` per violation. Defaults to the built-in rules `missing-attendees` (no `ATTENDEE` property) and `missing-location` (no `LOCATION` property, or an empty/whitespace value). Pass a custom `rules` array to replace or extend the defaults with further checks.
+
+```typescript
+const issues = calendar.lint(component);
+for (const issue of issues) {
+  console.log(`${issue.uid}: [${issue.rule}] ${issue.message}`);
+}
+```
+
+`LintRule` / `LintIssue`:
+
+```typescript
+interface LintRule {
+  name: string;
+  check(event: ICalComponent): boolean; // true = rule violated
+  message: string;
+}
+
+interface LintIssue {
+  uid: string;
+  summary?: string;
+  rule: string;
+  message: string;
+}
 ```
 
 ## Data types

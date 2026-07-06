@@ -16,4 +16,8 @@ export { CalendarDiff } from './CalendarDiff';
 export type { CalendarDiffResult } from './CalendarDiff';
 export { FreeSlotFinder } from './FreeSlotFinder';
 export { BusyTimeCounter } from './BusyTimeCounter';
+export { CalendarBuilder } from './CalendarBuilder';
+export type { CalendarBuilderOptions, EventInput } from './CalendarBuilder';
+export { CalendarLinter } from './CalendarLinter';
+export type { LintRule, LintIssue } from './CalendarLinter';
 export type { ICalComponent, ICalProperty } from './types';

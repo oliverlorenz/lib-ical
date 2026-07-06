@@ -12,6 +12,7 @@ import { ConflictFinder } from './ConflictFinder';
 import { CalendarDiff } from './CalendarDiff';
 import { FreeSlotFinder } from './FreeSlotFinder';
 import { BusyTimeCounter } from './BusyTimeCounter';
+import { CalendarLinter } from './CalendarLinter';
 import { ICalComponent } from './types';
 
 const MOCK_COMPONENT: ICalComponent = {
@@ -371,6 +372,32 @@ describe('Calendar', () => {
       const result = cal.countBusyTime(MOCK_COMPONENT, from, to);
       expect(count).toHaveBeenCalledWith(MOCK_COMPONENT, from, to);
       expect(result).toBe(3600000);
+    });
+  });
+
+  describe('lint', () => {
+    it('delegates to the injected CalendarLinter', () => {
+      const issues = [{ uid: 'a', rule: 'missing-attendees', message: 'Event has no attendees' }];
+      const lint = jest.fn().mockReturnValue(issues);
+      const cal = new Calendar(
+        {} as Parser,
+        {} as Serializer,
+        {} as Anonymizer,
+        {} as Merger,
+        {} as RangeCleaner,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { lint } as unknown as CalendarLinter,
+      );
+      const result = cal.lint(MOCK_COMPONENT);
+      expect(lint).toHaveBeenCalledWith(MOCK_COMPONENT, undefined);
+      expect(result).toBe(issues);
     });
   });
 
