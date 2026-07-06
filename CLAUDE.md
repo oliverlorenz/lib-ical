@@ -31,9 +31,9 @@ When `npm test` fails only due to a coverage threshold, run `npm test -- --cover
 
 ## Release & versioning
 
-Releases are fully automated via `semantic-release`. No manual steps required after merging.
+Releases are mostly automated via `semantic-release`, with one manual follow-up step (see below) — a workaround for branch protection on `main` (see #27).
 
-**The PR title is the release signal.** Because all PRs are squash-merged, the PR title becomes the commit message on `main`. `semantic-release` reads these commits to determine the version bump, generate `CHANGELOG.md`, create the GitHub Release, and publish to GitHub Packages.
+**The PR title is the release signal.** Because all PRs are squash-merged, the PR title becomes the commit message on `main`. `semantic-release` reads these commits to determine the version bump, publish to GitHub Packages, and create the GitHub Release (with generated notes).
 
 | PR title prefix | Version bump | In release notes |
 | --- | --- | --- |
@@ -50,11 +50,11 @@ Releases are fully automated via `semantic-release`. No manual steps required af
 - Breaking change via `!` suffix: `feat!: change Calendar constructor signature`
 - For breaking changes, also fill in the "Breaking changes" section of the PR template with migration instructions — this text ends up in the release notes
 
+**Manual follow-up after every release:** `semantic-release`'s `git` and `changelog` plugins are disabled — branch protection on `main` blocks `GITHUB_TOKEN` from pushing a release commit back (see #27), so there is no automated committer for a version-bump/changelog commit. After a release publishes, open a small `chore: sync package.json version to published X.Y.Z` PR (see #26, #30 for the pattern) to bring the committed `package.json` version back in line with the registry. `CHANGELOG.md` is not auto-maintained — rely on GitHub Releases for release notes instead.
+
 **Do not:**
 
-- Create `chore(release): …` commits manually — those are written back by `semantic-release`
-- Bump the version in `package.json` manually — `semantic-release` owns the version
-- Edit `CHANGELOG.md` manually — it is auto-generated
+- Bump the version in `package.json` outside of the manual sync-PR workflow above
 
 ## Architecture
 
