@@ -168,6 +168,25 @@ describe('CalendarInverter', () => {
     });
   });
 
+  describe('TZID-qualified datetimes', () => {
+    it('resolves a TZID event to the correct UTC busy interval', () => {
+      // 10:00-11:00 Europe/Berlin (CET, UTC+1) resolves to 09:00-10:00 UTC.
+      const cal = makeCalendar({
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'zoned' },
+          { name: 'DTSTART', params: { TZID: 'Europe/Berlin' }, value: '20240115T100000' },
+          { name: 'DTEND', params: { TZID: 'Europe/Berlin' }, value: '20240115T110000' },
+        ],
+        components: [],
+      });
+      const events = freeEvents(inverter.invert(cal, from, to));
+      expect(events).toHaveLength(2);
+      expect(dtend(events[0]!)).toBe('20240115T090000Z');
+      expect(dtstart(events[1]!)).toBe('20240115T100000Z');
+    });
+  });
+
   describe('free event properties', () => {
     it('sets SUMMARY to "Free" on each free event', () => {
       const result = inverter.invert(makeCalendar(), from, to);

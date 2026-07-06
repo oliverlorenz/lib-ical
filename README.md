@@ -416,7 +416,8 @@ Positional `BYDAY` values (e.g. `1MO`, `-1FR`) are treated as plain day-of-week 
 
 ## Known limitations
 
-- **Timezone handling**: TZID parameters on `DTSTART`/`DTEND` are preserved as-is during parse/serialize, but datetime arithmetic in `cleanRange`, `listEvents`, `findFreeSlots`, and related methods treats all values as UTC/floating. Timezone-aware expansion is not supported.
+- **Timezone handling**: `DTSTART`/`DTEND` values with a `TZID` parameter (e.g. `DTSTART;TZID=Europe/Berlin:20250115T100000`) are resolved to the correct UTC instant using `Intl.DateTimeFormat`, including DST, wherever datetime arithmetic happens (`cleanRange`, `listEvents`, `findFreeSlots`, and related methods). `VTIMEZONE` `STANDARD`/`DAYLIGHT` sub-components are not parsed — resolution relies on `TZID` being a valid IANA zone name (the common case). Values with no `TZID` and no trailing `Z` are still treated as floating/UTC, unchanged from before.
+- **RRULE with TZID near local midnight**: `RRuleExpander`'s `BYDAY`/`BYMONTHDAY` alignment is derived from `dtstart`'s UTC calendar day. For a recurring event whose local start time is close enough to midnight that its UTC offset crosses a day boundary, the generated occurrences can land a day off from the local day the rule was authored against. Non-recurring events and recurring events with daytime local start times are unaffected.
 - **RRULE**: BYSECOND, BYMINUTE, BYHOUR, BYYEARDAY, BYWEEKNO, BYSETPOS, and positional BYDAY (`1MO`) are not fully implemented.
 
 ## Development

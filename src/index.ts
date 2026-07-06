@@ -20,4 +20,5 @@ export { CalendarBuilder } from './CalendarBuilder';
 export type { CalendarBuilderOptions, EventInput } from './CalendarBuilder';
 export { CalendarLinter } from './CalendarLinter';
 export type { LintRule, LintIssue } from './CalendarLinter';
+export { parseDatetimeValue, formatUtcDatetime, parsePropertyDatetime } from './datetime';
 export type { ICalComponent, ICalProperty } from './types';

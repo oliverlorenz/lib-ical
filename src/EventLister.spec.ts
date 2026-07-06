@@ -334,4 +334,24 @@ describe('EventLister', () => {
       expect(uids(lister.list(cal, from, to))).toEqual(['a']);
     });
   });
+
+  describe('TZID-qualified datetimes', () => {
+    it('resolves a recurring DTSTART/DTEND with a TZID param to the correct UTC occurrence', () => {
+      const event: ICalComponent = {
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'zoned' },
+          { name: 'SUMMARY', params: {}, value: 'zoned' },
+          { name: 'DTSTART', params: { TZID: 'Europe/Berlin' }, value: '20240101T100000' },
+          { name: 'DTEND', params: { TZID: 'Europe/Berlin' }, value: '20240101T110000' },
+          { name: 'RRULE', params: {}, value: 'FREQ=DAILY' },
+        ],
+        components: [],
+      };
+      // 10:00 Europe/Berlin in January (CET, UTC+1) is 09:00 UTC.
+      const [result] = lister.list(makeCalendar(event), from, to);
+      expect(result!.properties.find((p) => p.name === 'DTSTART')!.value).toBe('20240115T090000Z');
+      expect(result!.properties.find((p) => p.name === 'DTEND')!.value).toBe('20240115T100000Z');
+    });
+  });
 });

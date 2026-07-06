@@ -76,6 +76,21 @@ describe('RangeCleaner', () => {
       const cal = makeCalendar(makeEvent('a', '20240115T100000Z', '20240115T120000Z'));
       expect(uids(cleaner.clean(cal, rangeStart, rangeEnd))).toEqual([]);
     });
+
+    it('removes a TZID event whose resolved UTC time matches the range exactly', () => {
+      // 11:00-13:00 Europe/Berlin (CET, UTC+1) resolves to 10:00-12:00 UTC.
+      const cal = makeCalendar({
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'zoned' },
+          { name: 'SUMMARY', params: {}, value: 'zoned' },
+          { name: 'DTSTART', params: { TZID: 'Europe/Berlin' }, value: '20240115T110000' },
+          { name: 'DTEND', params: { TZID: 'Europe/Berlin' }, value: '20240115T130000' },
+        ],
+        components: [],
+      });
+      expect(uids(cleaner.clean(cal, rangeStart, rangeEnd))).toEqual([]);
+    });
   });
 
   describe('partial overlap at start', () => {

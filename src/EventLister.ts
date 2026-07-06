@@ -1,5 +1,5 @@
 import { ICalComponent } from './types';
-import { parseDatetimeValue, formatUtcDatetime } from './datetime';
+import { parseDatetimeValue, parsePropertyDatetime, formatUtcDatetime } from './datetime';
 import { RRuleExpander } from './RRuleExpander';
 
 export class EventLister {
@@ -26,11 +26,11 @@ export class EventLister {
     const dtEndProp = event.properties.find((p) => p.name === 'DTEND');
     if (!dtStartProp) return [];
 
-    const start = parseDatetimeValue(dtStartProp.value);
+    const start = parsePropertyDatetime(dtStartProp);
     if (!start) return [];
 
     const end = dtEndProp
-      ? parseDatetimeValue(dtEndProp.value)
+      ? parsePropertyDatetime(dtEndProp)
       : EventLister.impliedEnd(dtStartProp.value, start);
     if (!end) return [];
 
@@ -50,10 +50,10 @@ export class EventLister {
     const dtEndProp = event.properties.find((p) => p.name === 'DTEND');
     if (!dtStartProp) return [];
 
-    const dtstart = parseDatetimeValue(dtStartProp.value);
+    const dtstart = parsePropertyDatetime(dtStartProp);
     if (!dtstart) return [];
 
-    const dtend = dtEndProp ? parseDatetimeValue(dtEndProp.value) : null;
+    const dtend = dtEndProp ? parsePropertyDatetime(dtEndProp) : null;
     const duration = dtend
       ? dtend.getTime() - dtstart.getTime()
       : /^\d{8}$/.test(dtStartProp.value)
@@ -90,7 +90,7 @@ export class EventLister {
     return new Set(
       prop.value
         .split(',')
-        .map((v) => parseDatetimeValue(v.trim()))
+        .map((v) => parseDatetimeValue(v.trim(), prop.params.TZID))
         .filter((d): d is Date => d !== null)
         .map((d) => d.getTime()),
     );
