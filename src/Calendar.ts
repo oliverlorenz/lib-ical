@@ -14,6 +14,10 @@ import { CalendarDiff } from './CalendarDiff';
 import type { CalendarDiffResult } from './CalendarDiff';
 import { FreeSlotFinder } from './FreeSlotFinder';
 import { BusyTimeCounter } from './BusyTimeCounter';
+import { CalendarBuilder } from './CalendarBuilder';
+import type { CalendarBuilderOptions } from './CalendarBuilder';
+import { CalendarLinter } from './CalendarLinter';
+import type { LintIssue, LintRule } from './CalendarLinter';
 
 export class Calendar {
   public static create(): Calendar {
@@ -31,6 +35,7 @@ export class Calendar {
       new CalendarDiff(),
       new FreeSlotFinder(),
       new BusyTimeCounter(),
+      new CalendarLinter(),
     );
   }
 
@@ -48,6 +53,7 @@ export class Calendar {
     private readonly calendarDiff: CalendarDiff = new CalendarDiff(),
     private readonly freeSlotFinder: FreeSlotFinder = new FreeSlotFinder(),
     private readonly busyTimeCounter: BusyTimeCounter = new BusyTimeCounter(),
+    private readonly calendarLinter: CalendarLinter = new CalendarLinter(),
   ) {}
 
   public parse(input: string): ICalComponent {
@@ -123,5 +129,13 @@ export class Calendar {
 
   public countBusyTime(component: ICalComponent, from: Date, to: Date): number {
     return this.busyTimeCounter.count(component, from, to);
+  }
+
+  public buildCalendar(options?: CalendarBuilderOptions): CalendarBuilder {
+    return new CalendarBuilder(options);
+  }
+
+  public lint(component: ICalComponent, rules?: ReadonlyArray<LintRule>): LintIssue[] {
+    return this.calendarLinter.lint(component, rules);
   }
 }
