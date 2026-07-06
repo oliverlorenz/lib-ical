@@ -1,5 +1,5 @@
 import { ICalComponent } from './types';
-import { parseDatetimeValue } from './datetime';
+import { parsePropertyDatetime } from './datetime';
 import { EventLister } from './EventLister';
 
 export interface ConflictPair {
@@ -27,10 +27,10 @@ export class ConflictFinder {
   }
 
   private overlaps(a: ICalComponent, b: ICalComponent): boolean {
-    const aStart = parseDatetimeValue(a.properties.find((p) => p.name === 'DTSTART')?.value ?? '');
-    const aEnd = parseDatetimeValue(a.properties.find((p) => p.name === 'DTEND')?.value ?? '');
-    const bStart = parseDatetimeValue(b.properties.find((p) => p.name === 'DTSTART')?.value ?? '');
-    const bEnd = parseDatetimeValue(b.properties.find((p) => p.name === 'DTEND')?.value ?? '');
+    const aStart = parsePropertyDatetime(a.properties.find((p) => p.name === 'DTSTART'));
+    const aEnd = parsePropertyDatetime(a.properties.find((p) => p.name === 'DTEND'));
+    const bStart = parsePropertyDatetime(b.properties.find((p) => p.name === 'DTSTART'));
+    const bEnd = parsePropertyDatetime(b.properties.find((p) => p.name === 'DTEND'));
 
     if (!aStart || !aEnd || !bStart || !bEnd) return false;
     return aStart < bEnd && bStart < aEnd;

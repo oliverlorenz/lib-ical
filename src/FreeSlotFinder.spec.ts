@@ -89,6 +89,25 @@ describe('FreeSlotFinder', () => {
     });
   });
 
+  describe('TZID-qualified datetimes', () => {
+    it('produces slots around a TZID event using its correctly resolved UTC instant', () => {
+      // 10:00-11:00 Europe/Berlin (CET, UTC+1) resolves to 09:00-10:00 UTC.
+      const cal = makeCalendar({
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'zoned' },
+          { name: 'DTSTART', params: { TZID: 'Europe/Berlin' }, value: '20240115T100000' },
+          { name: 'DTEND', params: { TZID: 'Europe/Berlin' }, value: '20240115T110000' },
+        ],
+        components: [],
+      });
+      const slots = finder.find(cal, from, to);
+      expect(slots).toHaveLength(2);
+      expect(slotDurationMs(slots[0]!)).toBe(1 * HOUR);
+      expect(slotDurationMs(slots[1]!)).toBe(8 * HOUR);
+    });
+  });
+
   describe('events without parseable dates', () => {
     it('skips slots returned by CalendarInverter that have no parseable DTSTART or DTEND', () => {
       const eventWithoutDates: ICalComponent = {

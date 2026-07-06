@@ -1,5 +1,5 @@
 import { ICalComponent, ICalProperty } from './types';
-import { parseDatetimeValue, formatUtcDatetime } from './datetime';
+import { parsePropertyDatetime, formatUtcDatetime } from './datetime';
 import { RRuleExpander } from './RRuleExpander';
 
 export class RangeCleaner {
@@ -38,11 +38,11 @@ export class RangeCleaner {
 
     if (!dtStartProp) return [event];
 
-    const eventStart = parseDatetimeValue(dtStartProp.value);
+    const eventStart = parsePropertyDatetime(dtStartProp);
     if (!eventStart) return [event];
 
     const eventEnd = dtEndProp
-      ? parseDatetimeValue(dtEndProp.value)
+      ? parsePropertyDatetime(dtEndProp)
       : RangeCleaner.impliedEnd(dtStartProp.value, eventStart);
     if (!eventEnd) return [event];
 
@@ -71,10 +71,10 @@ export class RangeCleaner {
     const dtEndProp = event.properties.find((p) => p.name === 'DTEND');
     if (!dtStartProp) return [event];
 
-    const dtstart = parseDatetimeValue(dtStartProp.value);
+    const dtstart = parsePropertyDatetime(dtStartProp);
     if (!dtstart) return [event];
 
-    const dtend = dtEndProp ? parseDatetimeValue(dtEndProp.value) : null;
+    const dtend = dtEndProp ? parsePropertyDatetime(dtEndProp) : null;
     const duration = dtend
       ? dtend.getTime() - dtstart.getTime()
       : /^\d{8}$/.test(dtStartProp.value)

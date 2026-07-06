@@ -84,6 +84,20 @@ describe('BusyTimeCounter', () => {
     expect(counter.count(cal, from, to)).toBe(30 * 60 * 1000);
   });
 
+  it('counts busy time for a TZID event using its correctly resolved UTC instant', () => {
+    // 10:00-11:00 Europe/Berlin (CET, UTC+1) resolves to 09:00-10:00 UTC = 1h.
+    const cal = makeCalendar({
+      name: 'VEVENT',
+      properties: [
+        { name: 'UID', params: {}, value: 'zoned' },
+        { name: 'DTSTART', params: { TZID: 'Europe/Berlin' }, value: '20240115T100000' },
+        { name: 'DTEND', params: { TZID: 'Europe/Berlin' }, value: '20240115T110000' },
+      ],
+      components: [],
+    });
+    expect(counter.count(cal, from, to)).toBe(1 * HOUR);
+  });
+
   it('ignores slots returned by CalendarInverter that have no parseable DTSTART or DTEND', () => {
     const eventWithoutDates: ICalComponent = {
       name: 'VEVENT',

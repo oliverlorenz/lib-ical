@@ -137,4 +137,25 @@ describe('ConflictFinder', () => {
       expect(finder.find(cal, from, to)).toHaveLength(0);
     });
   });
+
+  describe('TZID-qualified datetimes', () => {
+    it('does not report a false conflict for a TZID event resolved to a non-overlapping UTC time', () => {
+      // 11:00-12:00 Europe/Berlin (CET, UTC+1) resolves to 10:00-11:00 UTC,
+      // which only touches (does not overlap) the 11:00-12:00Z event below.
+      const zonedEvent: ICalComponent = {
+        name: 'VEVENT',
+        properties: [
+          { name: 'UID', params: {}, value: 'zoned' },
+          { name: 'DTSTART', params: { TZID: 'Europe/Berlin' }, value: '20240115T110000' },
+          { name: 'DTEND', params: { TZID: 'Europe/Berlin' }, value: '20240115T120000' },
+        ],
+        components: [],
+      };
+      const cal = makeCalendar(
+        zonedEvent,
+        makeEvent('utc', '20240115T110000Z', '20240115T120000Z'),
+      );
+      expect(finder.find(cal, from, to)).toHaveLength(0);
+    });
+  });
 });

@@ -1,5 +1,5 @@
 import { ICalComponent } from './types';
-import { parseDatetimeValue, formatUtcDatetime } from './datetime';
+import { parsePropertyDatetime, formatUtcDatetime } from './datetime';
 import { EventLister } from './EventLister';
 
 export class CalendarInverter {
@@ -26,10 +26,8 @@ export class CalendarInverter {
     const intervals: [Date, Date][] = [];
 
     for (const event of this.eventLister.list(component, from, to)) {
-      const start = parseDatetimeValue(
-        event.properties.find((p) => p.name === 'DTSTART')?.value ?? '',
-      );
-      const end = parseDatetimeValue(event.properties.find((p) => p.name === 'DTEND')?.value ?? '');
+      const start = parsePropertyDatetime(event.properties.find((p) => p.name === 'DTSTART'));
+      const end = parsePropertyDatetime(event.properties.find((p) => p.name === 'DTEND'));
       if (!start || !end) continue;
 
       // Clip to [from, to] since EventLister may return partially overlapping events
