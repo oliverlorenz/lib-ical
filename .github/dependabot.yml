@@ -1,42 +1,49 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 10
+      interval: weekly
+      day: monday
     groups:
       eslint:
-        dev-lint:
-          - "eslint"
-          - "eslint-*"
+        patterns:
+          - "eslint*"
           - "@eslint/*"
-          - "@eslint-community/*"
           - "@typescript-eslint/*"
-          - "typescript-strict-plugin"
-          - "typescript"
-          - "@types/*"
-          - "prettier"
           - "eslint-config-prettier"
+          - "eslint-plugin-*"
       jest:
         patterns:
           - "jest"
-          - "jest-*"
-          - "@jest/*"
           - "ts-jest"
-      tooling:
+          - "@types/jest"
+      typescript:
+        patterns:
+          - "typescript"
+          - "typescript-strict-plugin"
+          - "@types/node"
+      semantic-release:
+        patterns:
+          - "semantic-release"
+          - "@semantic-release/*"
+          - "conventional-changelog-*"
+      dev-tools:
         patterns:
           - "husky"
+          - "prettier"
           - "del-cli"
           - "globals"
+          - "knip"
+          - "markdownlint-cli2"
+          - "markdown-link-check"
+          - "publint"
+          - "@arethetypeswrong/*"
+      production:
+        dependency-type: production
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
+      interval: weekly
+    open-pull-requests-limit: 5
