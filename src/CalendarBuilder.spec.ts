@@ -131,6 +131,67 @@ describe('CalendarBuilder', () => {
         .build().components;
       expect(event.properties.find((p) => p.name === 'LOCATION')).toBeUndefined();
     });
+
+    it('adds an ATTENDEE property with mailto value for each attendee', () => {
+      const [event] = new CalendarBuilder()
+        .addEvent({
+          summary: 'X',
+          start: START,
+          end: END,
+          attendees: [{ email: 'a@example.com' }, { email: 'b@example.com' }],
+        })
+        .build().components;
+      const attendees = event.properties.filter((p) => p.name === 'ATTENDEE');
+      expect(attendees).toHaveLength(2);
+      expect(attendees[0].value).toBe('mailto:a@example.com');
+      expect(attendees[1].value).toBe('mailto:b@example.com');
+    });
+
+    it('sets CN param when attendee name is provided', () => {
+      const [event] = new CalendarBuilder()
+        .addEvent({
+          summary: 'X',
+          start: START,
+          end: END,
+          attendees: [{ email: 'a@example.com', name: 'Ada Lovelace' }],
+        })
+        .build().components;
+      const attendee = event.properties.find((p) => p.name === 'ATTENDEE');
+      expect(attendee?.params.CN).toBe('Ada Lovelace');
+    });
+
+    it('sets PARTSTAT param when attendee status is provided', () => {
+      const [event] = new CalendarBuilder()
+        .addEvent({
+          summary: 'X',
+          start: START,
+          end: END,
+          attendees: [{ email: 'a@example.com', status: 'ACCEPTED' }],
+        })
+        .build().components;
+      const attendee = event.properties.find((p) => p.name === 'ATTENDEE');
+      expect(attendee?.params.PARTSTAT).toBe('ACCEPTED');
+    });
+
+    it('omits CN and PARTSTAT params when not provided', () => {
+      const [event] = new CalendarBuilder()
+        .addEvent({
+          summary: 'X',
+          start: START,
+          end: END,
+          attendees: [{ email: 'a@example.com' }],
+        })
+        .build().components;
+      const attendee = event.properties.find((p) => p.name === 'ATTENDEE');
+      expect(attendee?.params).toEqual({});
+    });
+
+    it('omits ATTENDEE properties when not provided', () => {
+      const [event] = new CalendarBuilder()
+        .addEvent({ summary: 'X', start: START, end: END })
+        .build().components;
+      expect(event.properties.find((p) => p.name === 'ATTENDEE')).toBeUndefined();
+    });
   });
 
   describe('serialization', () => {
