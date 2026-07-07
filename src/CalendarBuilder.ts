@@ -1,6 +1,12 @@
 import { ICalComponent, ICalProperty } from './types';
 import { formatUtcDatetime } from './datetime';
 
+export interface AttendeeInput {
+  email: string;
+  name?: string;
+  status?: string;
+}
+
 export interface EventInput {
   uid?: string;
   summary: string;
@@ -9,6 +15,7 @@ export interface EventInput {
   description?: string;
   location?: string;
   allDay?: boolean;
+  attendees?: AttendeeInput[];
 }
 
 export interface CalendarBuilderOptions {
@@ -78,7 +85,23 @@ export class CalendarBuilder {
       properties.push({ name: 'LOCATION', params: {}, value: event.location });
     }
 
+    for (const attendee of event.attendees ?? []) {
+      properties.push(CalendarBuilder.buildAttendeeProperty(attendee));
+    }
+
     return { name: 'VEVENT', properties, components: [] };
+  }
+
+  private static buildAttendeeProperty(attendee: AttendeeInput): ICalProperty {
+    const params: Record<string, string> = {};
+    if (attendee.name) {
+      params.CN = attendee.name;
+    }
+    if (attendee.status) {
+      params.PARTSTAT = attendee.status;
+    }
+
+    return { name: 'ATTENDEE', params, value: `mailto:${attendee.email}` };
   }
 
   private static formatDateOnly(date: Date): string {
