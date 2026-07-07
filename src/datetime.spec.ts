@@ -57,6 +57,24 @@ describe('parseDatetimeValue', () => {
       new Date(Date.UTC(2025, 0, 15)),
     );
   });
+
+  it('resolves a globally-unique TZID (leading slash, vendor domain) to the same offset as the plain IANA name', () => {
+    expect(
+      parseDatetimeValue('20250115T100000', '/freeassociation.sourceforge.net/Europe/Berlin'),
+    ).toEqual(new Date(Date.UTC(2025, 0, 15, 9, 0, 0)));
+  });
+
+  it('resolves a globally-unique TZID in summer (DST) correctly', () => {
+    expect(
+      parseDatetimeValue('20250715T100000', '/freeassociation.sourceforge.net/Europe/Berlin'),
+    ).toEqual(new Date(Date.UTC(2025, 6, 15, 8, 0, 0)));
+  });
+
+  it('falls back to UTC (0 offset) for a tzid that cannot be resolved at all', () => {
+    expect(parseDatetimeValue('20250115T100000', 'Not/A_Real_Zone')).toEqual(
+      new Date(Date.UTC(2025, 0, 15, 10, 0, 0)),
+    );
+  });
 });
 
 describe('parsePropertyDatetime', () => {

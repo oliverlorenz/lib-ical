@@ -1,5 +1,14 @@
 import { ICalProperty } from './types';
 
+function normalizeTzid(tzid: string): string {
+  if (!tzid.startsWith('/')) return tzid;
+  const parts = tzid.slice(1).split('/');
+  while (parts.length > 1 && parts[0].includes('.')) {
+    parts.shift();
+  }
+  return parts.join('/');
+}
+
 function resolveTzidOffsetMinutes(tz: string, utcGuess: Date): number {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
@@ -39,7 +48,12 @@ function resolveTzidToUtc(
   tzid: string,
 ): Date {
   const utcGuess = new Date(Date.UTC(year, monthIndex, day, hour, minute, second));
-  const offsetMinutes = resolveTzidOffsetMinutes(tzid, utcGuess);
+  let offsetMinutes: number;
+  try {
+    offsetMinutes = resolveTzidOffsetMinutes(normalizeTzid(tzid), utcGuess);
+  } catch {
+    offsetMinutes = 0;
+  }
   return new Date(utcGuess.getTime() - offsetMinutes * 60_000);
 }
 
