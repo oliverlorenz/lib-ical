@@ -50,11 +50,11 @@ Releases are mostly automated via `semantic-release`, with one manual follow-up 
 - Breaking change via `!` suffix: `feat!: change Calendar constructor signature`
 - For breaking changes, also fill in the "Breaking changes" section of the PR template with migration instructions — this text ends up in the release notes
 
-**Manual follow-up after every release:** `semantic-release`'s `git` and `changelog` plugins are disabled — branch protection on `main` blocks `GITHUB_TOKEN` from pushing a release commit back (see #27), so there is no automated committer for a version-bump/changelog commit. After a release publishes, open a small `chore: sync package.json version to published X.Y.Z` PR (see #26, #30 for the pattern) to bring the committed `package.json` version back in line with the registry. `CHANGELOG.md` is not auto-maintained — rely on GitHub Releases for release notes instead.
+**No commits back to `main`:** `semantic-release`'s `git` and `changelog` plugins are disabled (branch protection on `main` blocks `GITHUB_TOKEN` from pushing, see #27). The committed `package.json` version is the placeholder `0.0.0-semantically-released`; `semantic-release` writes the real version into the published package only. Release notes live in GitHub Releases; there is no `CHANGELOG.md`.
 
 **Do not:**
 
-- Bump the version in `package.json` outside of the manual sync-PR workflow above
+- Change the `version` in `package.json` — it stays `0.0.0-semantically-released`
 
 ## Architecture
 
