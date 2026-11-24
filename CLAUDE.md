@@ -31,7 +31,9 @@ When `npm test` fails only due to a coverage threshold, run `npm test -- --cover
 
 ## Release & versioning
 
-Releases are mostly automated via `semantic-release`, with one manual follow-up step (see below) — a workaround for branch protection on `main` (see #27).
+Releases are fully automated via `semantic-release`. No manual steps required after merging.
+
+Release runs after every successful CI run on `main`, daily at 05:00 UTC (to pick up auto-merged Dependabot updates, whose merges do not trigger workflows), and on manual dispatch.
 
 **The PR title is the release signal.** Because all PRs are squash-merged, the PR title becomes the commit message on `main`. `semantic-release` reads these commits to determine the version bump, publish to GitHub Packages, and create the GitHub Release (with generated notes).
 
@@ -50,11 +52,17 @@ Releases are mostly automated via `semantic-release`, with one manual follow-up 
 - Breaking change via `!` suffix: `feat!: change Calendar constructor signature`
 - For breaking changes, also fill in the "Breaking changes" section of the PR template with migration instructions — this text ends up in the release notes
 
-**No commits back to `main`:** `semantic-release`'s `git` and `changelog` plugins are disabled (branch protection on `main` blocks `GITHUB_TOKEN` from pushing, see #27). The committed `package.json` version is the placeholder `0.0.0-semantically-released`; `semantic-release` writes the real version into the published package only. Release notes live in GitHub Releases; there is no `CHANGELOG.md`.
+**No commits back to `main`:** `semantic-release`'s `git` and `changelog` plugins are not used (the `main` ruleset only accepts PRs). The committed `package.json` version is the placeholder `0.0.0-semantically-released`; `semantic-release` writes the real version into the published package only. Release notes live in GitHub Releases; there is no `CHANGELOG.md`.
 
 **Do not:**
 
 - Change the `version` in `package.json` — it stays `0.0.0-semantically-released`
+
+## Dependency updates
+
+Dependabot opens grouped PRs weekly, waiting 5 days (`cooldown`) before adopting a new version. Runtime dependencies get `fix(deps): …` (→ patch release), dev dependencies `chore(deps): …`, GitHub Actions `ci(deps): …` (no release). Patch and minor updates are auto-merged once the required checks pass; majors need a manual review.
+
+Required checks on `main` (ruleset, created by `scripts/setup-ruleset.sh`): `CI result` (aggregates all CI jobs, path-filtered jobs count as passed when skipped) and `Validate PR title`. Actions are pinned to commit SHAs; Dependabot keeps them up to date.
 
 ## Architecture
 
