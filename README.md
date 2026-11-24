@@ -52,7 +52,7 @@ const icsString = calendar.serialize(component);
 Runnable examples are in the [examples/](examples/) folder. Each example imports from `@oliverlorenz/lib-ical`, so build the package first (`npm run build`) before executing them.
 
 | Example | What it shows |
-|---|---|
+| --- | --- |
 | [01-parse-and-serialize.ts](examples/01-parse-and-serialize.ts) | Parse an iCal string, inspect the component tree, serialize back |
 | [02-anonymize-and-merge.ts](examples/02-anonymize-and-merge.ts) | Strip personal data with `anonymize`, combine calendars with `merge` |
 | [03-clean-range.ts](examples/03-clean-range.ts) | Block a holiday week in a recurring event series with `cleanRange` |
@@ -108,7 +108,7 @@ Returns a new component with personal data removed. Useful for sharing or storin
 What gets replaced/removed:
 
 | Property | Action |
-|---|---|
+| --- | --- |
 | `SUMMARY` | Replaced with `"Event"` |
 | `DESCRIPTION` | Removed |
 | `LOCATION` | Removed |
@@ -138,7 +138,7 @@ const merged = calendar.merge(calA, calB, calC);
 Removes or clips all events that overlap the given time range. The range is half-open: `[start, end)`.
 
 | Event overlap | Result |
-|---|---|
+| --- | --- |
 | No overlap | Kept unchanged |
 | Fully inside range | Removed |
 | Starts before range, ends inside | DTEND clipped to `start` |
@@ -406,7 +406,7 @@ new Anonymizer(
 `cleanRange`, `listEvents`, `expandRecurring`, and `RRuleExpander` support the following `FREQ` values:
 
 | FREQ | INTERVAL | BYDAY | BYMONTHDAY | COUNT | UNTIL |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `DAILY` | ✓ | — | — | ✓ | ✓ |
 | `WEEKLY` | ✓ | ✓ | — | ✓ | ✓ |
 | `MONTHLY` | ✓ | — | ✓ | ✓ | ✓ |
